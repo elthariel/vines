@@ -2,7 +2,7 @@
 
 module Vines
   class Config
-    # Provides the configuration DSL to conf/config.rb for pubsub subdomains and
+    # Provides the configuration DSL to config/vines.rb for pubsub subdomains and
     # exposes the storage and notification systems that the pubsub stanzas need
     # to process. This class hides the complexity of determining pubsub behavior
     # in a standalone vs. clustered chat server environment from the stanzas.

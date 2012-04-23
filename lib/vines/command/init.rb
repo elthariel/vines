@@ -22,7 +22,7 @@ module Vines
       private
 
       # Limit file system database directory access so the server is the only
-      # process managing the data. The config.rb file contains component and
+      # process managing the data. The config/vines.rb file contains component and
       # database passwords, so restrict access to just the server user as well.
       def create_directories(dir)
         %w[conf web].each do |sub|
@@ -31,11 +31,11 @@ module Vines
         %w[data log pid].each do |sub|
           Dir.mkdir(File.join(dir, sub), 0700)
         end
-        File.chmod(0600, File.join(dir, 'conf/config.rb'))
+        File.chmod(0600, File.join(dir, 'config/vines.rb'))
       end
 
       def update_config(domain, dir)
-        config = File.expand_path('conf/config.rb', dir)
+        config = File.expand_path('config/vines.rb', dir)
         text = File.read(config)
         File.open(config, 'w') do |f|
           f.write(text.gsub('wonderland.lit', domain))

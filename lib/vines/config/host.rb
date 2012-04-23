@@ -4,7 +4,7 @@ module Vines
   class Config
 
     # Provides the DSL methods for the virtual host definitions in the
-    # conf/config.rb file. Host instances can be accessed at runtime through
+    # config/vines.rb file. Host instances can be accessed at runtime through
     # the +Config#vhosts+ method.
     class Host
       attr_reader :pubsubs

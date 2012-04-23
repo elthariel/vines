@@ -12,7 +12,7 @@ module Vines
 
       # Create a pubsub topic (a.k.a. node), in the given domain, to which
       # messages may be published. The domain argument will be one of the
-      # configured pubsub subdomains in conf/config.rb (e.g. games.wonderland.lit,
+      # configured pubsub subdomains in config/vines.rb (e.g. games.wonderland.lit,
       # topics.wonderland.lit, etc).
       def add_node(domain, node)
         redis.sadd("pubsub:#{domain}:nodes", node)

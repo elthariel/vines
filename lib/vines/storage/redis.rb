@@ -115,7 +115,7 @@ module Vines
       end
 
       # Return a new redis connection using the configuration attributes from the
-      # conf/config.rb file.
+      # config/vines.rb file.
       def connect
         args = @config.values_at(:host, :port, :password, :database)
         conn = EM::Hiredis::Client.new(*args)

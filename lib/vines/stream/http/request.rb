@@ -161,7 +161,7 @@ module Vines
         # Provide a vroute cookie in each response that uniquely identifies this
         # HTTP server. Reverse proxy servers (nginx/apache) can use this cookie
         # to implement sticky sessions. Return nil if vroute was not set in
-        # config.rb and no cookie should be sent.
+        # config/vines.rb and no cookie should be sent.
         def vroute_cookie
           route = @stream.config[:http].vroute
           route ? "Set-Cookie: vroute=#{route}; path=/; HttpOnly" : nil

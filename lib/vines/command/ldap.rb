@@ -8,7 +8,7 @@ module Vines
         require opts[:config]
         domain = opts[:args].first
         unless storage = Config.instance.vhost(domain).storage rescue nil
-          raise "#{domain} virtual host not found in conf/config.rb"
+          raise "#{domain} virtual host not found in config/vines.rb"
         end
         unless storage.ldap?
           raise "LDAP connector not configured for #{domain} virtual host"
