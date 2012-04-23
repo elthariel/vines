@@ -117,6 +117,7 @@ end
   vines/storage/null
   vines/storage/redis
   vines/storage/sql
+  vines/storage/rails_ar
 
   vines/config
   vines/config/host

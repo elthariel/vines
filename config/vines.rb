@@ -167,3 +167,7 @@ end
 #  password ''
 #  pool 5
 #end
+
+#storage 'rails-ar' do
+#  environment 'development'
+#end
