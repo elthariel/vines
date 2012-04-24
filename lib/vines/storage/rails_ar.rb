@@ -24,27 +24,20 @@ module Vines
       end
 
       # We are using rails configuration
-      # %w[environment].each do |name|
-      #   define_method(name) do |*args|
-      #     if args.first
-      #       @config[name.to_sym] = args.first
-      #     else
-      #       @config[name.to_sym]
-      #     end
-      #   end
-      # end
-
-      def initialize(&block)
-        @config = {}
+      %w[user_model user_name user_password].each do |name|
+        define_method(name) do |*args|
+          if args.first
+            @config[name.to_sym] = args.first
+          else
+            @config[name.to_sym]
+          end
+        end
       end
 
-      def authenticate(username, password)
-        user = find_user(username)
-        hash = BCrypt::Password.new(user.password) rescue nil
-        puts password
-        puts user.password
-        puts hash
-        (hash && hash == password) ? user : nil
+      def initialize(&block)
+        puts self.methods.sort.join "\n"
+        @config = {}
+        instance_eval(&block)
       end
 
       def find_user(jid)
@@ -52,7 +45,7 @@ module Vines
         return if jid.empty?
         xuser = user_by_jid(jid)
         return Vines::User.new(jid: jid).tap do |user|
-          user.name, user.password = xuser.username, xuser.encrypted_password
+          user.name, user.password = xuser.send(@config[:user_name]), xuser.send(@config[:user_password])
           xuser.contacts.each do |contact|
             groups = contact.groups.map {|group| group.name }
             user.roster << Vines::Contact.new(
@@ -151,7 +144,7 @@ module Vines
 
       def user_by_jid(jid)
         jid = JID.new(jid).bare.to_s
-        Sql::User.find_by_jid(jid, :include => {:contacts => :groups})
+        @config[:user_model].find_by_jid(jid, :include => {:contacts => :groups})
       end
 
       def fragment_by_jid(jid, node)
@@ -161,7 +154,7 @@ module Vines
       end
 
       def groups(contact)
-        contact.groups.map {|name| Sql::Group.find_or_create_by_name(name.strip) }
+        contact.groups.map {|name| @config[:user_model].find_or_create_by_name(name.strip) }
       end
     end
   end
