@@ -38,12 +38,21 @@ module Vines
         @config = {}
       end
 
+      def authenticate(username, password)
+        user = find_user(username)
+        hash = BCrypt::Password.new(user.password) rescue nil
+        puts password
+        puts user.password
+        puts hash
+        (hash && hash == password) ? user : nil
+      end
+
       def find_user(jid)
         jid = JID.new(jid).bare.to_s
         return if jid.empty?
         xuser = user_by_jid(jid)
         return Vines::User.new(jid: jid).tap do |user|
-          user.name, user.password = xuser.name, xuser.password
+          user.name, user.password = xuser.username, xuser.encrypted_password
           xuser.contacts.each do |contact|
             groups = contact.groups.map {|group| group.name }
             user.roster << Vines::Contact.new(
@@ -142,7 +151,7 @@ module Vines
 
       def user_by_jid(jid)
         jid = JID.new(jid).bare.to_s
-        User.find_by_jid(jid, :include => {:contacts => :groups})
+        Sql::User.find_by_jid(jid, :include => {:contacts => :groups})
       end
 
       def fragment_by_jid(jid, node)
