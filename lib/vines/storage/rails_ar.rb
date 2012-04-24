@@ -35,7 +35,6 @@ module Vines
       end
 
       def initialize(&block)
-        puts self.methods.sort.join "\n"
         @config = {}
         instance_eval(&block)
       end

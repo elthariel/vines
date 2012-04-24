@@ -39,6 +39,8 @@ module Vines
 
         recipients = if to.nil?
           stream.available_subscribers
+        elsif stream.config.send_presence_to_unsubscribed
+          stream.available_resources(to)
         else
           stream.user.subscribed_from?(to) ? stream.available_resources(to) : []
         end

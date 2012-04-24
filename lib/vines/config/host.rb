@@ -9,6 +9,13 @@ module Vines
     class Host
       attr_reader :pubsubs
 
+      %w[send_presence_to_unsubscribed].each do |sym|
+        attr_reader sym
+        define_method(sym) do |*args|
+          instance_variable_set ("@"+sym.to_s).to_sym, args.first
+        end
+      end
+
       def initialize(config, name, &block)
         @config, @name = config, name.downcase
         @storage, @ldap = nil, nil
@@ -18,6 +25,9 @@ module Vines
         validate_domain(@name)
         instance_eval(&block)
         raise "storage required for #{@name}" unless @storage
+
+        # Default values for simple configuration items
+        @send_presence_to_unsubscribed = false
       end
 
       def storage(name=nil, &block)
