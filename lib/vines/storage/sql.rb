@@ -33,7 +33,7 @@ module Vines
         defer(method) if deferrable
       end
 
-      %w[adapter host port database username password pool].each do |name|
+      %w[adapter host port database username password pool model_user_name model_user_password].each do |name|
         define_method(name) do |*args|
           if args.first
             @config[name.to_sym] = args.first
@@ -43,13 +43,31 @@ module Vines
         end
       end
 
+      def rails_mode(active = true)
+        @config[:rails_mode] = active
+        if active
+          rails_env = ENV['RAILS_ENV'] ? ENV['RAILS_ENV'] : 'development'
+          db_config = YAML::load_file('./config/database.yml')
+
+          if db_config.empty?
+            puts "You must run Vines with 'rails_mode true' from rails root"
+            exit 42
+          end
+          db_config = db_config[rails_env]
+
+          @config = @config.merge! db_config
+        end
+      end
+
       def initialize(&block)
         @config = {}
         instance_eval(&block)
-        required = [:adapter, :database]
-        required << [:host, :port] unless @config[:adapter] == 'sqlite3'
-        required.flatten.each {|key| raise "Must provide #{key}" unless @config[key] }
-        [:username, :password].each {|key| @config.delete(key) if empty?(@config[key]) }
+        unless @config[:rails_mode] # We assume rails db configuration is good
+          required = [:adapter, :database]
+          required << [:host, :port] unless @config[:adapter] == 'sqlite3'
+          required.flatten.each {|key| raise "Must provide #{key}" unless @config[key] }
+          [:username, :password].each {|key| @config.delete(key) if empty?(@config[key]) }
+        end
         establish_connection
       end
 
@@ -58,7 +76,7 @@ module Vines
         return if jid.empty?
         xuser = user_by_jid(jid)
         return Vines::User.new(jid: jid).tap do |user|
-          user.name, user.password = xuser.name, xuser.password
+          user.name, user.password = xuser.send(@config[:model_user_name]), xuser.send(@config[:model_user_password])
           xuser.contacts.each do |contact|
             groups = contact.groups.map {|group| group.name }
             user.roster << Vines::Contact.new(
@@ -73,9 +91,14 @@ module Vines
       with_connection :find_user
 
       def save_user(user)
-        xuser = user_by_jid(user.jid) || Sql::User.new(jid: user.jid.bare.to_s)
-        xuser.name = user.name
-        xuser.password = user.password
+        if @config[:rails_mode]
+          # If using rails mode, we want to disable user management in Vines
+          xuser = user_by_jid(user.jid)
+        else
+          xuser = user_by_jid(user.jid) || Sql::User.new(jid: user.jid.bare.to_s)
+          xuser.name = user.name
+          xuser.password = user.password
+        end
 
         # remove deleted contacts from roster
         xuser.contacts.delete(xuser.contacts.select do |contact|
@@ -149,6 +172,9 @@ module Vines
 
       # Create the tables and indexes used by this storage engine.
       def create_schema(args={})
+        # If integrated into rails, we will use rails migrations
+        return if @config[:rails_mode]
+
         args[:force] ||= false
 
         ActiveRecord::Schema.define do
@@ -194,7 +220,7 @@ module Vines
       private
 
       def establish_connection
-        ActiveRecord::Base.logger = Logger.new('/dev/null')
+        ActiveRecord::Base.logger = Logger.new @config[:rails_mode] ? 'log/vinesdb.log' : '/dev/null'
         ActiveRecord::Base.establish_connection(@config)
         # has_and_belongs_to_many requires a connection so configure the
         # associations here rather than in the class definitions above.

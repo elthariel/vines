@@ -41,6 +41,8 @@ module Vines
         fiber = Fiber.current
         op = proc do
           begin
+            puts "@@@@@@@@@@@@@@@@@@@@@@"
+            puts "#{old} :: #{args}"
             method(old).call(*args)
           rescue => e
             log.error("Thread pool operation failed: #{e.message}")

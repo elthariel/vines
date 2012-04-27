@@ -39,6 +39,7 @@ module Vines
 
         recipients = if to.nil?
           stream.available_subscribers
+        # To allow subscribing to muc chat room we must allow directed presence to unsubscribed users
         elsif stream.config.send_presence_to_unsubscribed
           stream.available_resources(to)
         else
